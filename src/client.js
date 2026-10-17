@@ -56,6 +56,42 @@ const CSS = [
   '.sv-loading{text-align:center;padding:20px;color:var(--dsw-alias-label-secondary,inherit);font-size:12px}',
   '.sv-icon{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center}',
   '.sv-time{font-size:11px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary,inherit))}',
+  '[aria-label="自动化任务"]{display:none!important}',
+  // ── Eternal dashboard (永动看板) styles ──
+  '.ed-root{display:flex;flex-direction:column;gap:16px}',
+  '.ed-section{display:flex;flex-direction:column;gap:8px}',
+  '.ed-section-title{font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--dsw-alias-label-secondary,inherit);display:flex;align-items:center;gap:6px}',
+  '.ed-layer-grid{display:flex;flex-direction:column;gap:6px}',
+  '.ed-layer-card{border:1px solid var(--dsw-alias-border-l3,rgba(127,127,127,.2));border-radius:8px;padding:10px 12px;background:var(--dsw-alias-bg-layer-1,transparent)}',
+  '.ed-layer-card.heartbeat{border-left:3px solid #10b981}',
+  '.ed-layer-card.patrol{border-left:3px solid #f59e0b}',
+  '.ed-layer-card.tour{border-left:3px solid #8b5cf6}',
+  '.ed-layer-card.other{border-left:3px solid rgba(127,127,127,.3)}',
+  '.ed-layer-header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px}',
+  '.ed-layer-name{font-weight:600;font-size:13px}',
+  '.ed-layer-badge{display:inline-flex;align-items:center;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:500;background:var(--dsw-alias-bg-layer-2,rgba(127,127,127,.12));color:var(--dsw-alias-label-secondary,inherit)}',
+  '.ed-layer-meta{display:flex;flex-wrap:wrap;gap:10px;font-size:11px;color:var(--dsw-alias-label-secondary,inherit)}',
+  '.ed-layer-meta-item{display:flex;align-items:center;gap:3px}',
+  '.ed-layer-meta-label{font-weight:500}',
+  '.ed-layer-prompt{font-size:11px;color:var(--dsw-alias-label-secondary,inherit);background:var(--dsw-alias-bg-layer-1,transparent);border-radius:6px;padding:5px 8px;border:1px solid var(--dsw-alias-border-l3,rgba(127,127,127,.15));white-space:pre-wrap;word-break:break-word;max-height:40px;overflow:hidden;cursor:pointer;transition:all .15s}',
+  '.ed-layer-prompt:hover{max-height:120px}',
+  '.ed-milestone-list{display:flex;flex-direction:column;gap:4px}',
+  '.ed-milestone-item{display:flex;align-items:flex-start;gap:8px;padding:6px 8px;border-radius:6px;background:var(--dsw-alias-bg-layer-1,transparent);font-size:12px;border:1px solid var(--dsw-alias-border-l3,rgba(127,127,127,.1))}',
+  '.ed-milestone-check{color:#10b981;flex-shrink:0;font-size:14px}',
+  '.ed-milestone-desc{flex:1;color:var(--dsw-alias-label-primary,inherit)}',
+  '.ed-milestone-time{font-size:10px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary,inherit));white-space:nowrap}',
+  '.ed-decision-list{display:flex;flex-direction:column;gap:4px}',
+  '.ed-decision-item{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:6px;background:var(--dsw-alias-bg-layer-1,transparent);font-size:12px;border:1px solid rgba(234,179,8,.2)}',
+  '.ed-decision-item.resolved{border-color:rgba(16,185,129,.2);opacity:.7}',
+  '.ed-decision-icon{flex-shrink:0;font-size:14px;color:#b45309}',
+  '.ed-decision-item.resolved .ed-decision-icon{color:#10b981}',
+  '.ed-decision-body{flex:1;display:flex;flex-direction:column;gap:2px}',
+  '.ed-decision-prompt{color:var(--dsw-alias-label-primary,inherit);font-size:12px}',
+  '.ed-decision-meta{display:flex;gap:8px;font-size:10px;color:var(--dsw-alias-label-tertiary,var(--dsw-alias-label-secondary,inherit))}',
+  '.ed-decision-resolution{font-size:11px;color:#10b981;font-style:italic}',
+  '.ed-empty-small{text-align:center;padding:20px 16px;color:var(--dsw-alias-label-secondary,inherit);font-size:12px}',
+  '.ed-layer-counts{display:flex;gap:6px;margin-bottom:8px}',
+  '.ed-layer-count{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:6px;font-size:11px;background:var(--dsw-alias-bg-layer-1,transparent);border:1px solid var(--dsw-alias-border-l3,rgba(127,127,127,.15))}',
 ].join('\n')
 
 // ── Inline SVG icons ──────────────────────────────────────────────────────
@@ -157,6 +193,172 @@ function DelegationItem(props) {
   )
 }
 
+// ── Eternal dashboard components ──────────────────────────────────────────
+
+const LAYER_LABELS = { heartbeat: '心跳', patrol: '巡检', tour: '巡游', other: '其他' }
+const LAYER_COLORS = { heartbeat: '#10b981', patrol: '#f59e0b', tour: '#8b5cf6', other: 'rgba(127,127,127,.5)' }
+
+function LayerCard(props) {
+  const { layer, expanded, onToggle } = props
+  const statusClass = layer.status === 'active' ? 'active' : 'inactive'
+  return h('div', { className: `ed-layer-card ${layer.layer}` },
+    h('div', { className: 'ed-layer-header' },
+      h('div', { className: 'ed-layer-name' }, layer.title),
+      h('div', { className: `sv-status ${statusClass}` },
+        layer.status === 'active' ? '运行中' : '已停止'),
+    ),
+    h('div', { className: 'ed-layer-meta' },
+      h('div', { className: 'ed-layer-meta-item' },
+        h('span', { className: 'ed-layer-meta-label' }, '周期'),
+        h('span', null, layer.frequency),
+      ),
+      h('div', { className: 'ed-layer-meta-item' },
+        h('span', { className: 'ed-layer-meta-label' }, '下次'),
+        h('span', { className: 'sv-time' }, layer.nextTrigger ? new Date(layer.nextTrigger).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '—'),
+      ),
+      h('div', { className: 'ed-layer-meta-item' },
+        h('span', { className: 'ed-layer-meta-label' }, '上次'),
+        h('span', { className: 'sv-time' }, layer.lastDelivery || '—'),
+      ),
+      h('div', { className: 'ed-layer-meta-item' },
+        h('span', { className: 'ed-layer-meta-label' }, '已执行'),
+        h('span', null, `${layer.deliveryCount}次`),
+      ),
+    ),
+    h('div', {
+      className: `ed-layer-prompt ${expanded ? 'sv-prompt-full' : ''}`,
+      onClick: onToggle,
+      title: expanded ? '点击收起' : '点击展开',
+    }, layer.promptSummary),
+  )
+}
+
+function MilestoneItem(props) {
+  const { m } = props
+  return h('div', { className: 'ed-milestone-item' },
+    h('span', { className: 'ed-milestone-check' }, '✓'),
+    h('span', { className: 'ed-milestone-desc' }, m.description),
+    m.session ? h('span', { className: 'ed-milestone-time', title: m.session }, m.session.slice(0, 12)) : null,
+    m.time ? h('span', { className: 'ed-milestone-time' }, new Date(m.time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })) : null,
+  )
+}
+
+function DecisionItem(props) {
+  const { d } = props
+  const resolved = d.status === 'resolved'
+  return h('div', { className: `ed-decision-item${resolved ? ' resolved' : ''}` },
+    h('span', { className: 'ed-decision-icon' }, resolved ? '✓' : '?'),
+    h('div', { className: 'ed-decision-body' },
+      h('div', { className: 'ed-decision-prompt' }, d.prompt),
+      d.session ? h('div', { className: 'ed-decision-meta' },
+        h('span', null, d.session.slice(0, 16)),
+        d.createdAt ? h('span', null, new Date(d.createdAt).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })) : null,
+      ) : null,
+      resolved && d.resolution ? h('div', { className: 'ed-decision-resolution' }, `→ ${d.resolution}`) : null,
+    ),
+  )
+}
+
+function EternalDashboard(props) {
+  const { dashboard, expanded, onToggle } = props
+  const layers = dashboard.layers || []
+  const counts = dashboard.layerCounts || {}
+  const delegation = dashboard.delegation || {}
+  const milestones = dashboard.milestones || []
+  const decisions = dashboard.decisions || []
+  const pendingDecisions = decisions.filter(d => d.status === 'pending')
+  const stats = delegation.stats || { total: 0, pending: 0, done: 0, failed: 0 }
+
+  return h('div', { className: 'ed-root' },
+    // Layer counts summary
+    h('div', { className: 'ed-layer-counts' },
+      h('div', { className: 'ed-layer-count' },
+        h('span', { style: { color: LAYER_COLORS.heartbeat } }, '●'),
+        `心跳 ${counts.heartbeat || 0}`),
+      h('div', { className: 'ed-layer-count' },
+        h('span', { style: { color: LAYER_COLORS.patrol } }, '●'),
+        `巡检 ${counts.patrol || 0}`),
+      h('div', { className: 'ed-layer-count' },
+        h('span', { style: { color: LAYER_COLORS.tour } }, '●'),
+        `巡游 ${counts.tour || 0}`),
+      h('div', { className: 'ed-layer-count' },
+        h('span', { style: { color: LAYER_COLORS.other } }, '●'),
+        `其他 ${counts.other || 0}`),
+    ),
+
+    // Section: 三层定时器
+    h('div', { className: 'ed-section' },
+      h('div', { className: 'ed-section-title' }, '⚡ 三层定时器'),
+      layers.length === 0
+        ? h('div', { className: 'ed-empty-small' }, '暂无活跃的永动定时器')
+        : h('div', { className: 'ed-layer-grid' },
+            layers.map(layer =>
+              h(LayerCard, {
+                key: layer.id,
+                layer,
+                expanded: !!expanded[layer.id],
+                onToggle: () => onToggle(layer.id),
+              })
+            )
+          ),
+    ),
+
+    // Section: 委托账本
+    h('div', { className: 'ed-section' },
+      h('div', { className: 'ed-section-title' }, '👥 委托账本'),
+      h('div', { className: 'sv-delegation-stats' },
+        h('div', { className: 'sv-stat' },
+          h('div', { className: 'sv-stat-num' }, stats.total),
+          h('div', { className: 'sv-stat-label' }, '总计'),
+        ),
+        h('div', { className: 'sv-stat' },
+          h('div', { className: 'sv-stat-num', style: { color: '#b45309' } }, stats.pending),
+          h('div', { className: 'sv-stat-label' }, '待处理'),
+        ),
+        h('div', { className: 'sv-stat' },
+          h('div', { className: 'sv-stat-num', style: { color: '#059669' } }, stats.done),
+          h('div', { className: 'sv-stat-label' }, '已完成'),
+        ),
+        h('div', { className: 'sv-stat' },
+          h('div', { className: 'sv-stat-num', style: { color: '#dc2626' } }, stats.failed),
+          h('div', { className: 'sv-stat-label' }, '失败'),
+        ),
+      ),
+      (delegation.recent || []).length === 0
+        ? h('div', { className: 'ed-empty-small' }, '暂无委派记录')
+        : h('div', { className: 'sv-delegation-list' },
+            delegation.recent.map(d =>
+              h(DelegationItem, { key: d.id, d })
+            )
+          ),
+    ),
+
+    // Section: 待用户决策
+    h('div', { className: 'ed-section' },
+      h('div', { className: 'ed-section-title' }, '❓ 待用户决策'),
+      pendingDecisions.length === 0
+        ? h('div', { className: 'ed-empty-small' }, '暂无待决策项')
+        : h('div', { className: 'ed-decision-list' },
+            pendingDecisions.map(d =>
+              h(DecisionItem, { key: d.id, d })
+            )
+          ),
+    ),
+
+    // Section: 今日里程碑
+    h('div', { className: 'ed-section' },
+      h('div', { className: 'ed-section-title' }, '🏁 今日里程碑'),
+      milestones.length === 0
+        ? h('div', { className: 'ed-empty-small' }, '今日暂无里程碑记录')
+        : h('div', { className: 'ed-milestone-list' },
+            milestones.map(m =>
+              h(MilestoneItem, { key: m.id, m })
+            )
+          ),
+    ),
+  )
+}
+
 // ── Main panel component ──────────────────────────────────────────────────
 
 function SchedulePanel() {
@@ -167,6 +369,7 @@ function SchedulePanel() {
   const [stats, setStats] = useState(null)
   const [error, setError] = useState(null)
   const [expanded, setExpanded] = useState({})
+  const [dashboard, setDashboard] = useState(null)
 
   const loadData = useCallback(async () => {
     setLoading(true)
@@ -191,9 +394,22 @@ function SchedulePanel() {
     setLoading(false)
   }, [])
 
+  const loadDashboard = useCallback(async () => {
+    try {
+      const r = await hostCall('eternal-dashboard', {})
+      if (r.ok) {
+        setDashboard(r)
+      }
+    } catch { /* ignore */ }
+  }, [])
+
   useEffect(() => {
     loadData()
   }, [loadData])
+
+  useEffect(() => {
+    if (tab === 'eternal') loadDashboard()
+  }, [tab, loadDashboard])
 
   const toggleExpand = (id) => {
     setExpanded(prev => ({ ...prev, [id]: !prev[id] }))
@@ -201,6 +417,7 @@ function SchedulePanel() {
 
   const activeCount = tasks.filter(t => t.status === 'active').length
   const totalCount = tasks.length
+  const dashboardPending = dashboard ? dashboard.decisions?.filter(d => d.status === 'pending').length || 0 : 0
 
   return h('div', { className: 'sv-root' },
     // Header
@@ -211,7 +428,7 @@ function SchedulePanel() {
       h('span', { style: { flex: 1 } }),
       h('button', {
         className: 'sv-refresh-btn',
-        onClick: loadData,
+        onClick: () => { loadData(); if (tab === 'eternal') loadDashboard() },
         disabled: loading,
         dangerouslySetInnerHTML: { __html: REFRESH_ICON + ' ' },
       }, '刷新'),
@@ -230,6 +447,10 @@ function SchedulePanel() {
         className: `sv-tab ${tab === 'delegations' ? 'active' : ''}`,
         onClick: () => setTab('delegations'),
       }, `委派记录 (${delegations.length})`),
+      h('div', {
+        className: `sv-tab ${tab === 'eternal' ? 'active' : ''}`,
+        onClick: () => setTab('eternal'),
+      }, `永动看板${dashboardPending ? ` (${dashboardPending}待决)` : ''}`),
     ),
 
     // Loading
@@ -283,6 +504,13 @@ function SchedulePanel() {
               )
             ),
       )
+    ) : null,
+
+    // Eternal dashboard tab
+    tab === 'eternal' && !loading ? (
+      dashboard
+        ? h(EternalDashboard, { dashboard, expanded, onToggle: toggleExpand })
+        : h('div', { className: 'sv-loading' }, '加载永动看板...'),
     ) : null,
   )
 }

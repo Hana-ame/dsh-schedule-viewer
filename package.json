@@ -1,9 +1,9 @@
 {
   "name": "dsh-schedule-viewer",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
-  "description": "Schedule viewer plugin for DSH: GUI sidebar button that displays all current scheduled tasks (schedules) with title, id, frequency, next trigger, status, and prompt content. Optional delegation ledger section shows recent session delegations.",
+  "description": "Schedule viewer plugin for DSH: GUI sidebar button that displays all current scheduled tasks, perpetual session dashboard (三层定时器/委托账本/待决策/里程碑), and delegation ledger.",
   "main": "./index.js",
   "exports": {
     ".": "./index.js",
