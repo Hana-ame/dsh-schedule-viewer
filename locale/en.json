@@ -1,0 +1,6 @@
+{
+  "meta": {
+    "title": "Schedule Viewer",
+    "description": "GUI sidebar panel for scheduled tasks: every schedule with next trigger and status, the recent delegation ledger, and a perpetual session dashboard (three-layer timers, pending decisions, daily milestones)."
+  }
+}

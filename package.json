@@ -9,7 +9,8 @@
     ".": "./index.js",
     "./package.json": "./package.json",
     "./src/host": "./src/host.js",
-    "./src/client": "./src/client.js"
+    "./src/client": "./src/client.js",
+    "./locale/*.json": "./locale/*.json"
   },
   "scripts": {
     "test": "node --test test/*.test.js"
