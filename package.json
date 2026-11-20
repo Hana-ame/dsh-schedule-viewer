@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "description": "Schedule viewer plugin for DSH: GUI sidebar button that displays all current scheduled tasks, perpetual session dashboard (三层定时器/委托账本/待决策/里程碑), and delegation ledger.",
+  "author": "nanaka",
   "main": "./index.js",
   "exports": {
     ".": "./index.js",
